@@ -143,10 +143,6 @@ function App() {
 
         <InfoSection size={size} />
       </main>
-
-      <footer className="app-footer">
-        <p>Frontend Visualization Challenge • React + TypeScript + Vite</p>
-      </footer>
     </div>
   );
 }
