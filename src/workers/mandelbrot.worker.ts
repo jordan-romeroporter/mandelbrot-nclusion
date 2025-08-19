@@ -19,11 +19,12 @@ type WorkerInput = {
     centerY: number;
     zoom: number;
   };
+  workerId?: number; // ADD: optional worker ID for tracking
 };
 
 self.onmessage = (e: MessageEvent<WorkerInput>) => {
   try {
-    const { chunk, width, height, maxIterations, viewport } = e.data;
+    const { chunk, width, height, maxIterations, viewport, workerId } = e.data;
 
     if (!chunk || !width || !height || !maxIterations) {
       throw new Error("Missing required parameters");
@@ -31,7 +32,7 @@ self.onmessage = (e: MessageEvent<WorkerInput>) => {
 
     const { startX, endX, startY, endY } = chunk;
 
-    // Viewport-aware scaling
+    // YOUR EXISTING viewport-aware scaling - unchanged
     const range = 2 * viewport.zoom;
     const scaleX = (range * 2) / width;
     const scaleY = (range * 2) / height;
@@ -48,12 +49,17 @@ self.onmessage = (e: MessageEvent<WorkerInput>) => {
 
     let arrayIndex = 0;
 
+    // ADD: Progress tracking
+    let rowsCompleted = 0;
+    const totalRows = endY - startY;
+
     for (let py = startY; py < endY; py++) {
       const y0 = py * scaleY + offsetY;
 
       for (let px = startX; px < endX; px++) {
         const x0 = px * scaleX + offsetX;
 
+        // YOUR EXISTING calculation logic - unchanged
         let x = 0;
         let y = 0;
         let iteration = 0;
@@ -77,7 +83,7 @@ self.onmessage = (e: MessageEvent<WorkerInput>) => {
           iteration++;
         }
 
-        // Smooth coloring for better gradients
+        // YOUR EXISTING smooth coloring - unchanged
         let smoothValue = iteration;
         if (iteration < maxIterations && escapeValue > 0) {
           smoothValue =
@@ -91,22 +97,36 @@ self.onmessage = (e: MessageEvent<WorkerInput>) => {
         pixels[arrayIndex++] = iteration;
         pixels[arrayIndex++] = smoothValue;
       }
+
+      // ADD: Report progress every 10 rows to avoid too many messages
+      rowsCompleted++;
+      if (rowsCompleted % 10 === 0 || rowsCompleted === totalRows) {
+        const pixelsCompleted = rowsCompleted * chunkWidth;
+        self.postMessage({
+          type: "progress",
+          workerId,
+          pixelsCompleted,
+          totalPixels: pixelCount,
+        });
+      }
     }
 
-    // Fix for TypeScript: explicitly use the worker postMessage signature
+    // YOUR EXISTING final message - just add type field
     self.postMessage(
       {
+        type: "complete", // ADD: type field
         chunk,
         pixels: pixels.buffer,
         pixelCount,
         success: true,
       },
-      [pixels.buffer] as Transferable[] // Cast to Transferable[]
+      [pixels.buffer] as Transferable[]
     );
   } catch (error) {
     console.error("Worker calculation error:", error);
 
     self.postMessage({
+      type: "complete", // ADD: type field
       success: false,
       error: (error as Error).message || "Unknown error occurred",
       chunk: e.data?.chunk || null,

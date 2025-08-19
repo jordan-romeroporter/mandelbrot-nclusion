@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ColorScheme, Viewport } from "../types";
 import { useMandelbrotRenderer } from "../hooks/useMandelbrotRenderer";
 
@@ -12,7 +12,7 @@ type MandelbrotCanvasProps = {
   useWorkers?: boolean;
 };
 
-export function MandelbrotCanvas({
+function MandelbrotCanvasBody({
   size,
   colorScheme,
   viewport,
@@ -74,5 +74,102 @@ export function MandelbrotCanvas({
         </div>
       )}
     </>
+  );
+}
+
+type ResponsiveCanvasContainerProps = {
+  children: React.ReactNode;
+  targetSize: number;
+  minSize?: number;
+};
+
+function ResponsiveCanvasContainer({
+  children,
+  targetSize,
+  minSize = 300,
+}: ResponsiveCanvasContainerProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [displaySize, setDisplaySize] = useState(targetSize);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (!containerRef.current) return;
+
+      const containerWidth = containerRef.current.clientWidth;
+      const isMobile = window.innerWidth < 768;
+      const padding = isMobile ? 40 : 20;
+
+      const maxAvailableSize = containerWidth - padding;
+
+      // Determine display size
+      if (maxAvailableSize < targetSize) {
+        // Container is smaller than target, scale down but not below minSize
+        setDisplaySize(Math.max(maxAvailableSize, minSize));
+      } else {
+        // Container is large enough, use target size
+        setDisplaySize(targetSize);
+      }
+    };
+
+    handleResize();
+
+    const resizeObserver = new ResizeObserver(handleResize);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    return () => resizeObserver.disconnect();
+  }, [targetSize, minSize]);
+
+  const scale = displaySize / targetSize;
+
+  return (
+    <div
+      ref={containerRef}
+      style={{
+        width: "100%",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        overflow: "hidden",
+        padding: "10px",
+      }}
+    >
+      <div
+        style={{
+          transform: `scale(${scale})`,
+          transformOrigin: "center",
+          width: `${targetSize}px`,
+          height: `${targetSize}px`,
+          willChange: "transform",
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+export function MandelbrotCanvas({
+  size,
+  colorScheme,
+  viewport,
+  maxIterations = 100,
+  onProgress,
+  onComplete,
+  useWorkers = true,
+}: MandelbrotCanvasProps) {
+  return (
+    <ResponsiveCanvasContainer targetSize={size}>
+      <MandelbrotCanvasBody
+        size={size}
+        colorScheme={colorScheme}
+        viewport={viewport}
+        maxIterations={maxIterations}
+        onProgress={onProgress}
+        onComplete={onComplete}
+        useWorkers={useWorkers}
+      />
+    </ResponsiveCanvasContainer>
   );
 }

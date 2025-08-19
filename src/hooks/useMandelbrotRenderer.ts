@@ -85,6 +85,7 @@ export function useMandelbrotRenderer({
     },
     [size, colorScheme, maxIterations, viewport, onProgress, onComplete]
   );
+
   const renderWithWorkers = useCallback(
     async (canvas: HTMLCanvasElement) => {
       const ctx = canvas.getContext("2d");
@@ -98,59 +99,93 @@ export function useMandelbrotRenderer({
       const imageData = ctx.createImageData(size, size);
       const data = imageData.data;
 
-      // Divide work into chunks for workers
       const rowsPerWorker = Math.ceil(size / workers.length);
-      let completedChunks = 0;
-      const totalChunks = workers.length;
+      const totalPixels = size * size;
+
+      // Track each worker's progress separately
+      const workerPixelCounts = new Map<number, number>();
 
       const promises = workers.map((worker, i) => {
         return new Promise<void>((resolve, reject) => {
+          const startY = i * rowsPerWorker;
+          const endY = Math.min((i + 1) * rowsPerWorker, size);
+          const workerMaxPixels = (endY - startY) * size;
+
           const chunk = {
-            startY: i * rowsPerWorker,
-            endY: Math.min((i + 1) * rowsPerWorker, size),
+            startY,
+            endY,
             startX: 0,
             endX: size,
           };
 
           const handleMessage = (e: MessageEvent) => {
-            const { success, pixels, pixelCount, error } = e.data;
+            if (e.data.type === "progress") {
+              // Store this worker's current progress
+              const { pixelsCompleted } = e.data;
+              workerPixelCounts.set(i, pixelsCompleted);
 
-            if (!success) {
-              console.error("Worker error:", error);
-              reject(new Error(error));
-              return;
-            }
+              // Calculate TOTAL progress by summing all workers
+              let totalCompleted = 0;
+              workerPixelCounts.forEach((count) => {
+                totalCompleted += count;
+              });
 
-            if (pixels) {
-              const pixelArray = new Float32Array(pixels);
+              const actualProgress = Math.min(
+                (totalCompleted / totalPixels) * 100,
+                99.9
+              );
+              onProgress?.(actualProgress);
+            } else if (e.data.type === "complete") {
+              const { success, pixels, pixelCount, error } = e.data;
 
-              for (let i = 0; i < pixelCount * 4; i += 4) {
-                const px = pixelArray[i];
-                const py = pixelArray[i + 1];
-                const iteration = pixelArray[i + 2];
-                const smoothValue = pixelArray[i + 3];
-
-                const idx = (py * size + px) * 4;
-                const color = colorScheme.getColor(
-                  iteration === maxIterations,
-                  iteration,
-                  maxIterations,
-                  smoothValue
-                );
-
-                data[idx] = color.r;
-                data[idx + 1] = color.g;
-                data[idx + 2] = color.b;
-                data[idx + 3] = 255;
+              if (!success) {
+                console.error("Worker error:", error);
+                reject(new Error(error));
+                return;
               }
+
+              if (pixels) {
+                const pixelArray = new Float32Array(pixels);
+
+                for (let j = 0; j < pixelCount * 4; j += 4) {
+                  const px = pixelArray[j];
+                  const py = pixelArray[j + 1];
+                  const iteration = pixelArray[j + 2];
+                  const smoothValue = pixelArray[j + 3];
+
+                  const idx = (py * size + px) * 4;
+                  const color = colorScheme.getColor(
+                    iteration === maxIterations,
+                    iteration,
+                    maxIterations,
+                    smoothValue
+                  );
+
+                  data[idx] = color.r;
+                  data[idx + 1] = color.g;
+                  data[idx + 2] = color.b;
+                  data[idx + 3] = 255;
+                }
+              }
+
+              // Mark this worker as 100% complete
+              workerPixelCounts.set(i, workerMaxPixels);
+
+              // Final progress check
+              let totalCompleted = 0;
+              workerPixelCounts.forEach((count) => {
+                totalCompleted += count;
+              });
+
+              // Only update progress if not already at 100%
+              if (totalCompleted < totalPixels) {
+                const finalProgress = (totalCompleted / totalPixels) * 100;
+                onProgress?.(finalProgress);
+              }
+
+              worker.removeEventListener("message", handleMessage);
+              resolve();
             }
-
-            completedChunks++;
-            const progress = (completedChunks / totalChunks) * 100;
-            onProgress?.(progress);
-
-            worker.removeEventListener("message", handleMessage);
-            resolve();
           };
 
           worker.addEventListener("message", handleMessage);
@@ -161,6 +196,7 @@ export function useMandelbrotRenderer({
             height: size,
             maxIterations,
             viewport,
+            workerId: i,
           });
         });
       });
@@ -168,9 +204,9 @@ export function useMandelbrotRenderer({
       try {
         await Promise.all(promises);
         ctx.putImageData(imageData, 0, 0);
+        onProgress?.(100); // Ensure we hit 100%
       } catch (error) {
         console.error("Worker rendering failed:", error);
-        // Fall back to synchronous rendering
         await renderSynchronous(canvas);
       }
 
