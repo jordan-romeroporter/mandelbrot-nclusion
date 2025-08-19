@@ -1,3 +1,5 @@
+import { memo } from "react";
+
 type SelectOption = {
   value: string | number;
   label: string;
@@ -11,20 +13,22 @@ type SelectControlProps = {
   disabled?: boolean;
 };
 
-export function SelectControl({
+export const SelectControl = memo(function SelectControl({
   label,
   value,
   options,
   onChange,
-  disabled = false
+  disabled = false,
 }: SelectControlProps) {
   return (
     <div>
-      <label style={{ 
-        display: 'block', 
-        marginBottom: '5px', 
-        fontWeight: 'bold' 
-      }}>
+      <label
+        style={{
+          display: "block",
+          marginBottom: "5px",
+          fontWeight: "bold",
+        }}
+      >
         {label}
       </label>
       <select
@@ -32,14 +36,14 @@ export function SelectControl({
         onChange={(e) => {
           const newValue = e.target.value;
           // Convert to number if the original value was a number
-          onChange(typeof value === 'number' ? Number(newValue) : newValue);
+          onChange(typeof value === "number" ? Number(newValue) : newValue);
         }}
         disabled={disabled}
         style={{
-          padding: '5px 10px',
-          borderRadius: '4px',
-          border: '1px solid #ccc',
-          cursor: disabled ? 'not-allowed' : 'pointer'
+          padding: "5px 10px",
+          borderRadius: "4px",
+          border: "1px solid #ccc",
+          cursor: disabled ? "not-allowed" : "pointer",
         }}
       >
         {options.map((option) => (
@@ -50,4 +54,4 @@ export function SelectControl({
       </select>
     </div>
   );
-}
+});

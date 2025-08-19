@@ -1,3 +1,5 @@
+import { memo } from "react";
+
 type RangeControlProps = {
   label: string;
   value: number;
@@ -10,7 +12,7 @@ type RangeControlProps = {
   helpText?: string;
 };
 
-export function RangeControl({
+export const RangeControl = memo(function RangeControl({
   label,
   value,
   min,
@@ -19,15 +21,17 @@ export function RangeControl({
   onChange,
   disabled = false,
   displayValue,
-  helpText
+  helpText,
 }: RangeControlProps) {
   return (
     <div>
-      <label style={{ 
-        display: 'block', 
-        marginBottom: '5px', 
-        fontWeight: 'bold' 
-      }}>
+      <label
+        style={{
+          display: "block",
+          marginBottom: "5px",
+          fontWeight: "bold",
+        }}
+      >
         {label}
       </label>
       <input
@@ -38,17 +42,19 @@ export function RangeControl({
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
         disabled={disabled}
-        style={{ width: '200px' }}
+        style={{ width: "200px" }}
       />
       {(displayValue || helpText) && (
-        <div style={{ 
-          fontSize: '14px', 
-          color: '#666', 
-          marginTop: '5px' 
-        }}>
+        <div
+          style={{
+            fontSize: "14px",
+            color: "#666",
+            marginTop: "5px",
+          }}
+        >
           {displayValue || helpText}
         </div>
       )}
     </div>
   );
-}
+});

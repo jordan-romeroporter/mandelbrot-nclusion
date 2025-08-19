@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { ColorScheme } from "../types";
 import { RangeControl } from "./RangeControl";
 import { SelectControl } from "./SelectControl";
@@ -11,7 +12,7 @@ type ControlPanelProps = {
   isCalculating: boolean;
 };
 
-export function ControlPanel({
+export const ControlPanel = memo(function ControlPanel({
   size,
   onSizeChange,
   colorSchemes,
@@ -51,7 +52,7 @@ export function ControlPanel({
       />
     </div>
   );
-}
+});
 
 const panelStyles = {
   display: "flex",

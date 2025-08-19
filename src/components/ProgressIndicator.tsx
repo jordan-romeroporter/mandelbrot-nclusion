@@ -1,3 +1,5 @@
+import { memo } from "react";
+
 type ProgressIndicatorProps = {
   progress: number;
   isCalculating: boolean;
@@ -30,7 +32,7 @@ function CompleteView({ totalPoints }: { totalPoints: number }) {
   );
 }
 
-export function ProgressIndicator({
+export const ProgressIndicator = memo(function ProgressIndicator({
   progress,
   isCalculating,
   totalPoints,
@@ -55,4 +57,4 @@ export function ProgressIndicator({
       )}
     </div>
   );
-}
+});

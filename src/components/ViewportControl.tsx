@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { ViewPreset } from "../types";
 import { SelectControl } from "./SelectControl";
 
@@ -17,7 +18,7 @@ const VIEW_PRESETS: ViewPreset[] = [
   { label: "Dendrite Forest", centerX: 0.37, centerY: 0.1, zoom: 0.05 },
 ];
 
-export function ViewportControl({
+export const ViewportControl = memo(function ViewportControl({
   currentPreset = "",
   onPresetChange,
   disabled = false,
@@ -50,4 +51,4 @@ export function ViewportControl({
       disabled={disabled}
     />
   );
-}
+});

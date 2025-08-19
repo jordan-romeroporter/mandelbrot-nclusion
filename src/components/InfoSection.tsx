@@ -1,3 +1,5 @@
+import { memo } from "react";
+
 type InfoItemProps = {
   label: string;
   value: string | React.ReactNode;
@@ -16,28 +18,27 @@ type InfoSectionProps = {
   size: number;
 };
 
-export function InfoSection({ size }: InfoSectionProps) {
+export const InfoSection = memo(function InfoSection({
+  size,
+}: InfoSectionProps) {
   return (
     <section className="info-section">
       <h2>Visualization Details</h2>
       <div className="info-grid">
-        <InfoItem 
-          label="Complex Plane Range" 
-          value="(-2, -2) to (2, 2)" 
+        <InfoItem label="Complex Plane Range" value="(-2, -2) to (2, 2)" />
+        <InfoItem
+          label="Light Colors"
+          value="Points that remain bounded (in the Mandelbrot set)"
         />
-        <InfoItem 
-          label="Light Colors" 
-          value="Points that remain bounded (in the Mandelbrot set)" 
+        <InfoItem
+          label="Dark Colors"
+          value="Points that grow unbounded (escape to infinity)"
         />
-        <InfoItem 
-          label="Dark Colors" 
-          value="Points that grow unbounded (escape to infinity)" 
-        />
-        <InfoItem 
-          label="Current Resolution" 
-          value={`${size}×${size} grid segments`} 
+        <InfoItem
+          label="Current Resolution"
+          value={`${size}×${size} grid segments`}
         />
       </div>
     </section>
   );
-}
+});
