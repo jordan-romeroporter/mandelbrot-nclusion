@@ -11,23 +11,6 @@ type ControlPanelProps = {
   isCalculating: boolean;
 };
 
-const panelStyles = {
-  display: "flex",
-  gap: "30px",
-  justifyContent: "center",
-  padding: "20px",
-  backgroundColor: "#f5f5f5",
-  borderRadius: "8px",
-  margin: "20px auto",
-  maxWidth: "600px",
-  flexWrap: "wrap" as const,
-};
-
-function formatPointCount(size: number): string {
-  const total = size * size;
-  return `${size}×${size} = ${total.toLocaleString()} points`;
-}
-
 export function ControlPanel({
   size,
   onSizeChange,
@@ -40,6 +23,11 @@ export function ControlPanel({
     value: index,
     label: scheme.name,
   }));
+
+  function formatPointCount(size: number): string {
+    const total = size * size;
+    return `${size}×${size} = ${total.toLocaleString()} points`;
+  }
 
   return (
     <div style={panelStyles}>
@@ -64,3 +52,15 @@ export function ControlPanel({
     </div>
   );
 }
+
+const panelStyles = {
+  display: "flex",
+  gap: "30px",
+  justifyContent: "center",
+  padding: "20px",
+  backgroundColor: "#f5f5f5",
+  borderRadius: "8px",
+  margin: "20px auto",
+  maxWidth: "600px",
+  flexWrap: "wrap" as const,
+};
