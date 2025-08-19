@@ -1,4 +1,5 @@
-// Ultra-high performance Mandelbrot worker with smooth coloring
+/// <reference lib="webworker" />
+
 const VALUES_PER_PIXEL = 4;
 
 type ChunkData = {
@@ -23,103 +24,93 @@ type WorkerInput = {
 self.onmessage = (e: MessageEvent<WorkerInput>) => {
   try {
     const { chunk, width, height, maxIterations, viewport } = e.data;
-    
+
     if (!chunk || !width || !height || !maxIterations) {
-      throw new Error('Missing required parameters');
+      throw new Error("Missing required parameters");
     }
-    
+
     const { startX, endX, startY, endY } = chunk;
-    
+
     // Viewport-aware scaling
     const range = 2 * viewport.zoom;
     const scaleX = (range * 2) / width;
     const scaleY = (range * 2) / height;
     const offsetX = viewport.centerX - range;
     const offsetY = viewport.centerY - range;
-    
+
     const chunkWidth = endX - startX;
     const chunkHeight = endY - startY;
     const pixelCount = chunkWidth * chunkHeight;
     const pixels = new Float32Array(pixelCount * VALUES_PER_PIXEL);
-    
+
     const ESCAPE_RADIUS_SQUARED = 4;
     const LOG_2 = Math.log(2);
-    
+
     let arrayIndex = 0;
-    
+
     for (let py = startY; py < endY; py++) {
       const y0 = py * scaleY + offsetY;
-      
+
       for (let px = startX; px < endX; px++) {
         const x0 = px * scaleX + offsetX;
-        
+
         let x = 0;
         let y = 0;
         let iteration = 0;
         let xSquared = 0;
         let ySquared = 0;
         let escapeValue = 0;
-        
+
         while (iteration < maxIterations) {
           xSquared = x * x;
           ySquared = y * y;
           escapeValue = xSquared + ySquared;
-          
+
           if (escapeValue > ESCAPE_RADIUS_SQUARED) {
             break;
           }
-          
+
           const xTemp = xSquared - ySquared + x0;
           y = 2 * x * y + y0;
           x = xTemp;
-          
+
           iteration++;
         }
-        
+
         // Smooth coloring for better gradients
         let smoothValue = iteration;
         if (iteration < maxIterations && escapeValue > 0) {
-          smoothValue = iteration + 1 - Math.log(Math.log(Math.sqrt(escapeValue)) / LOG_2) / LOG_2;
+          smoothValue =
+            iteration +
+            1 -
+            Math.log(Math.log(Math.sqrt(escapeValue)) / LOG_2) / LOG_2;
         }
-        
+
         pixels[arrayIndex++] = px;
         pixels[arrayIndex++] = py;
         pixels[arrayIndex++] = iteration;
         pixels[arrayIndex++] = smoothValue;
       }
     }
-    
+
+    // Fix for TypeScript: explicitly use the worker postMessage signature
     self.postMessage(
-      { 
-        chunk, 
+      {
+        chunk,
         pixels: pixels.buffer,
         pixelCount,
-        success: true 
+        success: true,
       },
-      [pixels.buffer]
+      [pixels.buffer] as Transferable[] // Cast to Transferable[]
     );
-    
   } catch (error) {
-    console.error('Worker calculation error:', error);
-    
+    console.error("Worker calculation error:", error);
+
     self.postMessage({
       success: false,
-      error: (error as Error).message || 'Unknown error occurred',
+      error: (error as Error).message || "Unknown error occurred",
       chunk: e.data?.chunk || null,
-      pixels: null
+      pixels: null,
     });
   }
-};
-
-self.onerror = (event) => {
-  console.error('Worker uncaught error:', event);
-  
-  self.postMessage({
-    success: false,
-    error: `Uncaught error: ${event.message || 'Unknown error'}`,
-    chunk: null,
-    pixels: null
-  });
-  
-  return true;
 };

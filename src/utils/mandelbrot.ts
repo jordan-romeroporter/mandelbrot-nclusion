@@ -1,4 +1,4 @@
-import { MandelbrotPoint, Viewport } from '../types';
+import type { MandelbrotPoint, Viewport } from "../types";
 
 export function pixelToComplex(
   px: number,
@@ -31,34 +31,35 @@ export function calculateMandelbrotPoint(
   let xSquared = 0;
   let ySquared = 0;
   let escapeValue = 0;
-  
+
   while (iteration < maxIterations) {
     xSquared = x * x;
     ySquared = y * y;
     escapeValue = xSquared + ySquared;
-    
+
     if (escapeValue > 4) {
       break;
     }
-    
+
     const xTemp = xSquared - ySquared + x0;
     y = 2 * x * y + y0;
     x = xTemp;
     iteration++;
   }
-  
+
   // Calculate smooth value for better coloring
   let smoothValue = iteration;
   if (iteration < maxIterations && escapeValue > 0) {
     const log2 = Math.log(2);
-    smoothValue = iteration + 1 - Math.log(Math.log(Math.sqrt(escapeValue)) / log2) / log2;
+    smoothValue =
+      iteration + 1 - Math.log(Math.log(Math.sqrt(escapeValue)) / log2) / log2;
   }
-  
+
   return {
     x: x0,
     y: y0,
     iterations: iteration,
     isBounded: iteration === maxIterations,
-    smoothValue
+    smoothValue,
   };
 }

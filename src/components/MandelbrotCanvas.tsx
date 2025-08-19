@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
-import { ColorScheme, Viewport } from '../types';
-import { useMandelbrotRenderer } from '../hooks/useMandelbrotRenderer';
+import { useEffect, useRef } from "react";
+import type { ColorScheme, Viewport } from "../types";
+import { useMandelbrotRenderer } from "../hooks/useMandelbrotRenderer";
 
 type MandelbrotCanvasProps = {
   size: number;
@@ -19,15 +19,15 @@ export function MandelbrotCanvas({
   maxIterations = 100,
   onProgress,
   onComplete,
-  useWorkers = true
+  useWorkers = true,
 }: MandelbrotCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { 
-    renderToCanvas, 
-    isCalculating, 
+  const {
+    renderToCanvas,
+    isCalculating,
     cleanup,
     isUsingWorkers,
-    workerCount
+    workerCount,
   } = useMandelbrotRenderer({
     size,
     colorScheme,
@@ -35,7 +35,7 @@ export function MandelbrotCanvas({
     viewport,
     onProgress,
     onComplete,
-    useWorkers
+    useWorkers,
   });
 
   useEffect(() => {
@@ -43,7 +43,7 @@ export function MandelbrotCanvas({
     if (canvas) {
       renderToCanvas(canvas);
     }
-    
+
     return cleanup;
   }, [renderToCanvas, cleanup]);
 
@@ -52,22 +52,24 @@ export function MandelbrotCanvas({
       <canvas
         ref={canvasRef}
         style={{
-          border: '2px solid #333',
-          borderRadius: '4px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          display: 'block',
-          margin: '0 auto',
+          border: "2px solid #333",
+          borderRadius: "4px",
+          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          display: "block",
+          margin: "0 auto",
           opacity: isCalculating ? 0.9 : 1,
-          transition: 'opacity 0.3s ease'
+          transition: "opacity 0.3s ease",
         }}
       />
       {isUsingWorkers && (
-        <div style={{ 
-          textAlign: 'center', 
-          marginTop: '10px',
-          fontSize: '12px',
-          color: '#666'
-        }}>
+        <div
+          style={{
+            textAlign: "center",
+            marginTop: "10px",
+            fontSize: "12px",
+            color: "#666",
+          }}
+        >
           Using {workerCount} parallel workers
         </div>
       )}
