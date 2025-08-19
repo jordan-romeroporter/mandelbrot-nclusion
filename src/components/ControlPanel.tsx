@@ -1,6 +1,6 @@
-import { ColorScheme } from '../types';
-import { RangeControl } from './RangeControl';
-import { SelectControl } from './SelectControl';
+import type { ColorScheme } from "../types";
+import { RangeControl } from "./RangeControl";
+import { SelectControl } from "./SelectControl";
 
 type ControlPanelProps = {
   size: number;
@@ -12,15 +12,15 @@ type ControlPanelProps = {
 };
 
 const panelStyles = {
-  display: 'flex',
-  gap: '30px',
-  justifyContent: 'center',
-  padding: '20px',
-  backgroundColor: '#f5f5f5',
-  borderRadius: '8px',
-  margin: '20px auto',
-  maxWidth: '600px',
-  flexWrap: 'wrap' as const
+  display: "flex",
+  gap: "30px",
+  justifyContent: "center",
+  padding: "20px",
+  backgroundColor: "#f5f5f5",
+  borderRadius: "8px",
+  margin: "20px auto",
+  maxWidth: "600px",
+  flexWrap: "wrap" as const,
 };
 
 function formatPointCount(size: number): string {
@@ -34,11 +34,11 @@ export function ControlPanel({
   colorSchemes,
   selectedSchemeIndex,
   onSchemeChange,
-  isCalculating
+  isCalculating,
 }: ControlPanelProps) {
   const colorSchemeOptions = colorSchemes.map((scheme, index) => ({
     value: index,
-    label: scheme.name
+    label: scheme.name,
   }));
 
   return (
@@ -53,7 +53,7 @@ export function ControlPanel({
         disabled={isCalculating}
         displayValue={formatPointCount(size)}
       />
-      
+
       <SelectControl
         label="Color Scheme"
         value={selectedSchemeIndex}
