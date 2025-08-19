@@ -6,7 +6,7 @@ import { InfoSection } from "./components/InfoSection";
 import { ViewportControl } from "./components/ViewportControl";
 import { colorSchemes } from "./utils/colorSchemes";
 import type { Viewport, ViewPreset } from "./types";
-import "./styles/App.css";
+import "./styles/global.css";
 
 const INITIAL_SIZE = 500;
 const INITIAL_SCHEME_INDEX = 0;
